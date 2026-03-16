@@ -26,7 +26,7 @@ StatsType = tuple[float, float, float, dict[str, float]]
 
 
 def output(message: str = "") -> None:
-    print(message)  # noqa: T201
+    print(message)
 
 
 def is_leap_year(year: int) -> bool:
