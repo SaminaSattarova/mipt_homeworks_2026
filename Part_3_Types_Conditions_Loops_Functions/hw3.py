@@ -4,7 +4,6 @@ UNKNOWN_COMMAND_MSG = "Unknown command!"
 NONPOSITIVE_VALUE_MSG = "Value must be grater than zero!"
 INCORRECT_DATE_MSG = "Invalid date!"
 OP_SUCCESS_MSG = "Added"
-
 MONTH_PROFIT_PREFIX = "В этом месяце прибыль составила"  # noqa: RUF001
 MONTH_LOSS_PREFIX = "В этом месяце убыток составил"  # noqa: RUF001
 
