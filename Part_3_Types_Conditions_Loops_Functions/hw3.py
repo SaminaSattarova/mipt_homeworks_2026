@@ -21,10 +21,12 @@ MAX_MONTH = 12
 Types = tuple[float, int, int, int]
 IncomsState = list[Types]
 CostsState = dict[str, list[Types]]
+DateType = tuple[int, int, int]
+StatsType = tuple[float, float, float, dict[str, float]]
 
 
 def output(message: str = "") -> None:
-    print(message)
+    print(message)  # noqa: T201
 
 
 def is_leap_year(year: int) -> bool:
@@ -50,27 +52,10 @@ def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
     :return: tuple формата (день, месяц, год) или None, если дата неправильная.
     :rtype: tuple[int, int, int] | None
     """
-    date = maybe_dt.split("-")
-    if len(date) != DATE_PARTS_COUNT:
+    date_parts = maybe_dt.split("-")
+    if not is_valid_text_date_parts(date_parts):
         return None
-
-    day_text, month_text, year_text = date
-    if not (day_text.isdigit() and month_text.isdigit() and year_text.isdigit()):
-        return None
-    if len(day_text) != DAY_LEN or len(month_text) != MONTH_LEN or len(year_text) != YEAR_LEN:
-        return None
-
-    day = int(day_text)
-    month = int(month_text)
-    year = int(year_text)
-
-    if month < 1 or month > MAX_MONTH:
-        return None
-    in_month = days_in_month(month, year)
-    if day < 1 or day > in_month:
-        return None
-
-    return day, month, year
+    return parse_date_parts(date_parts)
 
 
 def income_handler(amount: float, income_date: str) -> str:
@@ -85,6 +70,36 @@ def days_in_month(month: int, year: int) -> int:
     if month in (1, 3, 5, 7, 8, 10, 12):
         return 31
     return 30
+
+
+def is_valid_text_date_parts(parts: list[str]) -> bool:
+    if len(parts) != DATE_PARTS_COUNT:
+        return False
+
+    day_text, month_text, year_text = parts
+    if not (day_text.isdigit() and month_text.isdigit() and year_text.isdigit()):
+        return False
+
+    return (
+        len(day_text) == DAY_LEN
+        and len(month_text) == MONTH_LEN
+        and len(year_text) == YEAR_LEN
+    )
+
+
+def parse_date_parts(parts: list[str]) -> tuple[int, int, int] | None:
+    day = int(parts[0])
+    month = int(parts[1])
+    year = int(parts[2])
+
+    if month < 1 or month > MAX_MONTH:
+        return None
+
+    month_days = days_in_month(month, year)
+    if day < 1 or day > month_days:
+        return None
+
+    return day, month, year
 
 
 def check_amount(amount: str) -> bool:
@@ -106,9 +121,13 @@ def is_valid_category(category: str) -> bool:
     return category != "" and "." not in category and "," not in category
 
 
-def input_lines() -> list[str]:
+def iter_input_lines() -> list[str]:
     with open(0) as stdin:
         return stdin.readlines()
+
+
+def make_operation(amount: float, date: DateType) -> Types:
+    return amount, date[0], date[1], date[2]
 
 
 def income_request(command: list[str], incomes: IncomsState) -> None:
@@ -131,7 +150,7 @@ def income_request(command: list[str], incomes: IncomsState) -> None:
         output(INCORRECT_DATE_MSG)
         return
 
-    incomes.append((amount, date[0], date[1], date[2]))
+    incomes.append(make_operation(amount, date))
     output(OP_SUCCESS_MSG)
 
 
@@ -162,11 +181,15 @@ def cost_request(command: list[str], costs: CostsState) -> None:
 
     if category not in costs:
         costs[category] = []
-    costs[category].append((amount, date[0], date[1], date[2]))
+    costs[category].append(make_operation(amount, date))
     output(OP_SUCCESS_MSG)
 
 
-def stats_request(command: list[str], incomes: IncomsState, costs: CostsState) -> None:
+def stats_request(
+    command: list[str],
+    incomes: IncomsState,
+    costs: CostsState,
+) -> None:
     if len(command) != STATS_PARTS_COUNT:
         output(UNKNOWN_COMMAND_MSG)
         return
@@ -176,14 +199,32 @@ def stats_request(command: list[str], incomes: IncomsState, costs: CostsState) -
         output(INCORRECT_DATE_MSG)
         return
 
+    total_capital, month_income, month_cost, dict_of_costs = calculate_stats(
+        date,
+        incomes,
+        costs,
+    )
+
+    print_stats(
+        command[1],
+        total_capital,
+        month_income,
+        month_cost,
+        dict_of_costs,
+    )
+
+
+def calculate_stats(
+    date: DateType,
+    incomes: IncomsState,
+    costs: CostsState,
+) -> StatsType:
     all_incomes = incomes_total(date, incomes)
     all_costs = costs_total(date, costs)
     incomes_in_this_month = incomes_in_month(date, incomes)
     costs_in_this_month = costs_in_month(date, costs)
     dict_of_costs = amount_on_categories(date, costs)
-
-    print_stats(
-        command[1],
+    return (
         all_incomes - all_costs,
         incomes_in_this_month,
         costs_in_this_month,
@@ -220,10 +261,10 @@ def change_format(amount: float) -> str:
     return f"{amount:.2f}"
 
 
-def amount_on_categories(date: tuple[int, int, int], costs: CostsState) -> dict[str, float]:
-    dict_of_costs = {}
+def amount_on_categories(date: DateType, costs: CostsState) -> dict[str, float]:
+    dict_of_costs: dict[str, float] = {}
     for category, operations in costs.items():
-        summa_category = 0
+        summa_category = 0.0
         for operation in operations:
             if this_month_or_not(operation[1], operation[2], operation[3], date):
                 summa_category += operation[0]
@@ -232,24 +273,24 @@ def amount_on_categories(date: tuple[int, int, int], costs: CostsState) -> dict[
     return dict_of_costs
 
 
-def incomes_total(date: tuple[int, int, int], incomes: IncomsState) -> float:
-    total = 0
+def incomes_total(date: DateType, incomes: IncomsState) -> float:
+    total = 0.0
     for operation in incomes:
         if before_date_or_not(operation[1], operation[2], operation[3], date):
             total += operation[0]
     return total
 
 
-def incomes_in_month(date: tuple[int, int, int], incomes: IncomsState) -> float:
-    total = 0
+def incomes_in_month(date: DateType, incomes: IncomsState) -> float:
+    total = 0.0
     for operation in incomes:
         if this_month_or_not(operation[1], operation[2], operation[3], date):
             total += operation[0]
     return total
 
 
-def costs_total(date: tuple[int, int, int], costs: CostsState) -> float:
-    total = 0
+def costs_total(date: DateType, costs: CostsState) -> float:
+    total = 0.0
     for operations in costs.values():
         for operation in operations:
             if before_date_or_not(operation[1], operation[2], operation[3], date):
@@ -257,8 +298,8 @@ def costs_total(date: tuple[int, int, int], costs: CostsState) -> float:
     return total
 
 
-def costs_in_month(date: tuple[int, int, int], costs: CostsState) -> float:
-    total = 0
+def costs_in_month(date: DateType, costs: CostsState) -> float:
+    total = 0.0
     for operations in costs.values():
         for operation in operations:
             if this_month_or_not(operation[1], operation[2], operation[3], date):
@@ -266,12 +307,17 @@ def costs_in_month(date: tuple[int, int, int], costs: CostsState) -> float:
     return total
 
 
-def before_date_or_not(day: int, month: int, year: int, date: tuple[int, int, int]) -> bool:
-    return (year, month, day) <= (date[2], date[1], date[0])
+def before_date_or_not(day: int, month: int, year: int, date: DateType) -> bool:
+    target = date[2], date[1], date[0]
+    operation = year, month, day
+    return operation <= target
 
 
-def this_month_or_not(day: int, month: int, year: int, date: tuple[int, int, int]) -> bool:
-    return year == date[2] and month == date[1] and day <= date[0]
+def this_month_or_not(day: int, month: int, year: int, date: DateType) -> bool:
+    same_year = year == date[2]
+    same_month = month == date[1]
+    same_day_or_before = day <= date[0]
+    return same_year and same_month and same_day_or_before
 
 
 def input_request(request: str, incomes: IncomsState, costs: CostsState) -> None:
@@ -297,7 +343,7 @@ def main() -> None:
     incomes: IncomsState = []
     costs: CostsState = {}
 
-    for request in input_lines():
+    for request in iter_input_lines():
         input_request(request, incomes, costs)
 
 
