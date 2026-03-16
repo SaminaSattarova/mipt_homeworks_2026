@@ -31,6 +31,13 @@ def income_handler(amount: float, income_date: str) -> str:
     return f"{OP_SUCCESS_MSG} {amount=} {income_date=}"
 
 
+def cost_handler(category_name: str, amount: float, income_date: str) -> str:
+    return f"{OP_SUCCESS_MSG} {category_name} {amount=} {income_date=}"
+
+def stats_handler(report_date: str) -> str:
+    return f"Statistic for {report_date}"
+
+
 def main() -> None:
     """Ваш код здесь"""
 
