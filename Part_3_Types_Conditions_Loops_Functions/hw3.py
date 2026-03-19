@@ -263,7 +263,7 @@ def change_format(amount: float) -> str:
 def amount_on_categories(date: DateType, costs: CostsState) -> dict[str, float]:
     dict_of_costs: dict[str, float] = {}
     for category, operations in costs.items():
-        summa_category: float = 0
+        summa_category = 0.0
         for operation in operations:
             if this_month_or_not(operation[1], operation[2], operation[3], date):
                 summa_category += operation[0]
@@ -273,7 +273,7 @@ def amount_on_categories(date: DateType, costs: CostsState) -> dict[str, float]:
 
 
 def incomes_total(date: DateType, incomes: IncomsState) -> float:
-    total: float = 0
+    total = 0.0
     for operation in incomes:
         if before_date_or_not(operation[1], operation[2], operation[3], date):
             total += operation[0]
@@ -281,7 +281,7 @@ def incomes_total(date: DateType, incomes: IncomsState) -> float:
 
 
 def incomes_in_month(date: DateType, incomes: IncomsState) -> float:
-    total: float = 0
+    total = 0.0
     for operation in incomes:
         if this_month_or_not(operation[1], operation[2], operation[3], date):
             total += operation[0]
@@ -289,7 +289,7 @@ def incomes_in_month(date: DateType, incomes: IncomsState) -> float:
 
 
 def costs_total(date: DateType, costs: CostsState) -> float:
-    total: float = 0
+    total = 0.0
     for operations in costs.values():
         for operation in operations:
             if before_date_or_not(operation[1], operation[2], operation[3], date):
@@ -298,7 +298,7 @@ def costs_total(date: DateType, costs: CostsState) -> float:
 
 
 def costs_in_month(date: DateType, costs: CostsState) -> float:
-    total: float = 0
+    total = 0.0
     for operations in costs.values():
         for operation in operations:
             if this_month_or_not(operation[1], operation[2], operation[3], date):
