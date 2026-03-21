@@ -19,6 +19,7 @@ COST_PARTS_COUNT = 4
 STATS_PARTS_COUNT = 2
 MAX_MONTH = 12
 CATEGORY_NAME_PARTS = 2
+COST_CATEGORIES_PARTS_COUNT = 2
 
 Types = tuple[float, int, int, int]
 IncomesState: list[Types] = []
@@ -55,21 +56,39 @@ def input_request(request: str) -> None:
     if not command:
         output(UNKNOWN_COMMAND_MSG)
         return
+
     command_name = command[0]
     if command_name == "income":
-        if check_income(command):
-            output(income_handler(float(command[1].replace(",", ".")), command[2]))
+        handle_income_command(command)
     elif command_name == "cost":
-        if check_cost(command):
-            output(cost_handler(command[1], float(command[2]), command[3]))
+        handle_cost_command(command)
     elif command_name == "stats":
-        if check_stats(command):
-            stats_handler(command[1])
+        handle_stats_command(command)
     else:
         output(UNKNOWN_COMMAND_MSG)
 
 
-def check_income(command: list) -> bool:
+def handle_income_command(command: list[str]) -> None:
+    if not check_income(command):
+        return
+    amount = float(command[1].replace(",", "."))
+    output(income_handler(amount, command[2]))
+
+
+def handle_cost_command(command: list[str]) -> None:
+    if not check_cost(command):
+        return
+    amount = float(command[2].replace(",", "."))
+    output(cost_handler(command[1], amount, command[3]))
+
+
+def handle_stats_command(command: list[str]) -> None:
+    if not check_stats(command):
+        return
+    stats_handler(command[1])
+
+
+def check_income(command: list[str]) -> bool:
     if len(command) != INCOME_PARTS_COUNT:
         output(UNKNOWN_COMMAND_MSG)
         return False
@@ -86,8 +105,8 @@ def check_income(command: list) -> bool:
     return True
 
 
-def check_cost(command: list) -> bool:
-    if len(command) == COST_PARTS_COUNT and command[1] == "categories":
+def check_cost(command: list[str]) -> bool:
+    if len(command) == COST_CATEGORIES_PARTS_COUNT and command[1] == "categories":
         output(cost_categories_handler())
         return False
     if len(command) != COST_PARTS_COUNT:
@@ -103,7 +122,7 @@ def check_cost(command: list) -> bool:
     return check_amount_cost(command)
 
 
-def check_amount_cost(command: list) -> bool:
+def check_amount_cost(command: list[str]) -> bool:
     amount = float(command[2].replace(",", "."))
     if amount <= 0:
         output(NONPOSITIVE_VALUE_MSG)
@@ -115,7 +134,7 @@ def check_amount_cost(command: list) -> bool:
     return True
 
 
-def check_stats(command: list) -> bool:
+def check_stats(command: list[str]) -> bool:
     if len(command) != STATS_PARTS_COUNT:
         output(UNKNOWN_COMMAND_MSG)
         return False
@@ -140,13 +159,6 @@ def is_valid_category(category: str) -> bool:
 
 
 def is_leap_year(year: int) -> bool:
-    """
-    Для заданного года определяет: високосный (True) или невисокосный (False).
-
-    :param int year: Проверяемый год
-    :return: Значение високосности.
-    :rtype: bool
-    """
     if year % 4 == 0 and year % 100 != 0:
         return True
     if year % 100 == 0:
@@ -155,13 +167,6 @@ def is_leap_year(year: int) -> bool:
 
 
 def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
-    """
-    Парсит дату формата DD-MM-YYYY из строки.
-
-    :param str maybe_dt: Проверяемая строка
-    :return: typle формата (день, месяц, год) или None, если дата неправильная.
-    :rtype: tuple[int, int, int] | None
-    """
     date_parts = maybe_dt.split("-")
     if not is_valid_text_date_parts(date_parts):
         return None
@@ -204,8 +209,17 @@ def days_in_month(month: int, year: int) -> int:
 
 
 def income_handler(amount: float, income_date: str) -> str:
-    IncomesState.append(make_operation(amount, extract_date(income_date)))
-    financial_transactions_storage.append({"amount": amount, "date": income_date})
+    if amount <= 0:
+        financial_transactions_storage.append({"amount": amount, "date": income_date})
+        return NONPOSITIVE_VALUE_MSG
+
+    date = extract_date(income_date)
+    if date is None:
+        financial_transactions_storage.append({"amount": amount, "date": income_date})
+        return INCORRECT_DATE_MSG
+
+    IncomesState.append(make_operation(amount, date))
+    financial_transactions_storage.append({"amount": amount, "date": date})
     return OP_SUCCESS_MSG
 
 
@@ -227,11 +241,30 @@ def check_amount(amount: str) -> bool:
 
 
 def cost_handler(category_name: str, amount: float, income_date: str) -> str:
+    if not is_valid_category(category_name):
+        financial_transactions_storage.append(
+            {"category": category_name, "amount": amount, "date": income_date}
+        )
+        return NOT_EXISTS_CATEGORY
+
+    if amount <= 0:
+        financial_transactions_storage.append(
+            {"category": category_name, "amount": amount, "date": income_date}
+        )
+        return NONPOSITIVE_VALUE_MSG
+
+    date = extract_date(income_date)
+    if date is None:
+        financial_transactions_storage.append(
+            {"category": category_name, "amount": amount, "date": income_date}
+        )
+        return INCORRECT_DATE_MSG
+
     if category_name not in CostsState:
         CostsState[category_name] = []
-    CostsState[category_name].append(make_operation(amount, extract_date(income_date)))
+    CostsState[category_name].append(make_operation(amount, date))
     financial_transactions_storage.append(
-        {"category": category_name, "amount": amount, "date": income_date}
+        {"category": category_name, "amount": amount, "date": date}
     )
     return OP_SUCCESS_MSG
 
@@ -245,9 +278,10 @@ def cost_categories_handler() -> str:
 
 
 def stats_handler(report_date: str) -> str:
-    total_capital, month_income, month_cost, dict_of_costs = calculate_stats(
-        extract_date(report_date)
-    )
+    date = extract_date(report_date)
+    if date is None:
+        return INCORRECT_DATE_MSG
+    total_capital, month_income, month_cost, dict_of_costs = calculate_stats(date)
     print_stats(
         report_date,
         total_capital,
@@ -301,16 +335,21 @@ def change_format(amount: float) -> str:
     return f"{amount:.2f}"
 
 
+def amount_on_category(operations: list[Types], date: DateType) -> float:
+    total = 0.0
+    for operation in operations:
+        if this_month_or_not(operation[1], operation[2], operation[3], date):
+            total += operation[0]
+    return total
+
+
 def amount_on_categories(date: DateType) -> dict[str, float]:
     dict_of_costs: dict[str, float] = {}
     for category, operations in CostsState.items():
-        summa_category: float = 0
-        for operation in operations:
-            if this_month_or_not(operation[1], operation[2], operation[3], date):
-                summa_category += operation[0]
-        if summa_category > 0:
+        category_total = amount_on_category(operations, date)
+        if category_total > 0:
             target_category = category.split("::")[1]
-            dict_of_costs[target_category] = summa_category
+            dict_of_costs[target_category] = category_total
     return dict_of_costs
 
 
