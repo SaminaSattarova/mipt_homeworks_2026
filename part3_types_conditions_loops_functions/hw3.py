@@ -210,12 +210,12 @@ def days_in_month(month: int, year: int) -> int:
 
 def income_handler(amount: float, income_date: str) -> str:
     if amount <= 0:
-        financial_transactions_storage.append({"amount": amount, "date": income_date})
+        financial_transactions_storage.append({})
         return NONPOSITIVE_VALUE_MSG
 
     date = extract_date(income_date)
     if date is None:
-        financial_transactions_storage.append({"amount": amount, "date": income_date})
+        financial_transactions_storage.append({})
         return INCORRECT_DATE_MSG
 
     IncomesState.append(make_operation(amount, date))
@@ -242,22 +242,16 @@ def check_amount(amount: str) -> bool:
 
 def cost_handler(category_name: str, amount: float, income_date: str) -> str:
     if not is_valid_category(category_name):
-        financial_transactions_storage.append(
-            {"category": category_name, "amount": amount, "date": income_date}
-        )
+        financial_transactions_storage.append({})
         return NOT_EXISTS_CATEGORY
 
     if amount <= 0:
-        financial_transactions_storage.append(
-            {"category": category_name, "amount": amount, "date": income_date}
-        )
+        financial_transactions_storage.append({})
         return NONPOSITIVE_VALUE_MSG
 
     date = extract_date(income_date)
     if date is None:
-        financial_transactions_storage.append(
-            {"category": category_name, "amount": amount, "date": income_date}
-        )
+        financial_transactions_storage.append({})
         return INCORRECT_DATE_MSG
 
     if category_name not in CostsState:
