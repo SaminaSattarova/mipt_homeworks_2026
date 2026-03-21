@@ -147,7 +147,7 @@ def check_stats(command: list[str]) -> bool:
 
 
 def is_valid_category(category: str) -> bool:
-    if category == "" or " " in category or "." in category or "," in category:
+    if category == "" or "." in category or "," in category:
         return False
     parts = category.split("::")
     if len(parts) != CATEGORY_NAME_PARTS:
@@ -330,7 +330,7 @@ def change_format(amount: float) -> str:
 
 
 def amount_on_category(operations: list[Types], date: DateType) -> float:
-    total = 0.0
+    total: float = 0
     for operation in operations:
         if this_month_or_not(operation[1], operation[2], operation[3], date):
             total += operation[0]
