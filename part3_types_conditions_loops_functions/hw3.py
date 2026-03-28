@@ -179,11 +179,7 @@ def is_valid_text_date_parts(parts: list[str]) -> bool:
     day_text, month_text, year_text = parts
     if not (day_text.isdigit() and month_text.isdigit() and year_text.isdigit()):
         return False
-    return (
-        len(day_text) == DAY_LEN
-        and len(month_text) == MONTH_LEN
-        and len(year_text) == YEAR_LEN
-    )
+    return len(day_text) == DAY_LEN and len(month_text) == MONTH_LEN and len(year_text) == YEAR_LEN
 
 
 def parse_date_parts(parts: list[str]) -> tuple[int, int, int] | None:
@@ -257,9 +253,7 @@ def cost_handler(category_name: str, amount: float, income_date: str) -> str:
     if category_name not in CostsState:
         CostsState[category_name] = []
     CostsState[category_name].append(make_operation(amount, date))
-    financial_transactions_storage.append(
-        {"category": category_name, "amount": amount, "date": date}
-    )
+    financial_transactions_storage.append({"category": category_name, "amount": amount, "date": date})
     return OP_SUCCESS_MSG
 
 
