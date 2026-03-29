@@ -179,7 +179,8 @@ def is_valid_text_date_parts(parts: list[str]) -> bool:
     day_text, month_text, year_text = parts
     if not (day_text.isdigit() and month_text.isdigit() and year_text.isdigit()):
         return False
-    return len(day_text) == DAY_LEN and len(month_text) == MONTH_LEN and len(year_text) == YEAR_LEN
+    is_day_length_ok = len(day_text) == DAY_LEN
+    return is_day_length_ok and len(month_text) == MONTH_LEN and len(year_text) == YEAR_LEN
 
 
 def parse_date_parts(parts: list[str]) -> tuple[int, int, int] | None:
