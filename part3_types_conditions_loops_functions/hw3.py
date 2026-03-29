@@ -42,11 +42,6 @@ EXPENSE_CATEGORIES = {
 financial_transactions_storage: list[dict[str, object]] = []
 
 
-def iter_input_lines() -> list[str]:
-    with open(0) as stdin:
-        return stdin.readlines()
-
-
 def output(message: str = "") -> None:
     print(message)
 
@@ -390,7 +385,10 @@ def this_month_or_not(day: int, month: int, year: int, date: DateType) -> bool:
 
 
 def main() -> None:
-    for request in iter_input_lines():
+    while True:
+        request = input()
+        if not request:
+            break
         input_request(request)
 
 
