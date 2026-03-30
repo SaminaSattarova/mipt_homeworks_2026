@@ -17,7 +17,7 @@ class DictStorage(Storage[K, V]):
 
     def get(self, key: K) -> V | None:
         if key in self._data:
-            return self._data.get(key)
+            return self._data[key]
         return None
 
     def exists(self, key: K) -> bool:
@@ -25,7 +25,7 @@ class DictStorage(Storage[K, V]):
 
     def remove(self, key: K) -> None:
         if key in self._data:
-            self._data.pop(key, None)
+            del self._data[key]
 
     def clear(self) -> None:
         self._data = {}
@@ -175,9 +175,9 @@ class CachedProperty[V]:
 
     def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
         if instance is None:
-            return self # type: ignore[return-value]
+            return self  # type: ignore[return-value]
         if instance.cache.exists(self.func.__name__) is not None:
-            return instance.cache.get(self.func.__name__) # type: ignore[return-value]
+            return instance.cache.get(self.func.__name__)  # type: ignore[return-value]
         value = self.func(instance)
         instance.cache.set(self.func.__name__, value)
         return value
