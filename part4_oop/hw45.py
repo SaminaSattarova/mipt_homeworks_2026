@@ -100,7 +100,7 @@ class LFUPolicy(Policy[K]):
     def __init__(self, capacity: int = 5):
         self.capacity = capacity
         self._key_counter = {}
-        self._last = None
+        self._last: K | None = None
 
     def register_access(self, key: K) -> None:
         if key in self._key_counter:
@@ -175,10 +175,9 @@ class CachedProperty[V]:
 
     def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
         if instance is None:
-            return self
-        cache_value = instance.cache.exists(self.func.__name__)
-        if cache_value is not None:
-            return cache_value
+            return self # type: ignore[return-value]
+        if instance.cache.exists(self.func.__name__) is not None:
+            return instance.cache.get(self.func.__name__) # type: ignore[return-value]
         value = self.func(instance)
         instance.cache.set(self.func.__name__, value)
         return value
