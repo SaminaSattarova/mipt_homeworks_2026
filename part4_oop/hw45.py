@@ -100,17 +100,22 @@ class LFUPolicy(Policy[K]):
     def __init__(self, capacity: int = 5):
         self.capacity = capacity
         self._key_counter = {}
+        self._last = None
 
     def register_access(self, key: K) -> None:
         if key in self._key_counter:
             self._key_counter[key] += 1
+            self._last = None
         else:
             self._key_counter[key] = 1
+            self._last = key
 
     def get_key_to_evict(self) -> K | None:
         remove_key, remove_count = None, 100000
         if len(self._key_counter) >= self.capacity:
             for key, count in self._key_counter.items():
+                if key == self._last:
+                    continue
                 if count < remove_count:
                     remove_key = key
                     remove_count = count
@@ -120,9 +125,12 @@ class LFUPolicy(Policy[K]):
     def remove_key(self, key: K) -> None:
         if key in self._key_counter:
             self._key_counter.pop(key, None)
+        if key == self._last:
+            self._last = None
 
     def clear(self) -> None:
         self._key_counter = {}
+        self._last = None
 
     @property
     def has_keys(self) -> bool:
@@ -139,8 +147,8 @@ class MIPTCache(Cache[K, V]):
         if value_key is not None:
             self.policy.remove_key(value_key)
             self.storage.remove(value_key)
-        self.policy.register_access(key)
         self.storage.set(key, value)
+        self.policy.register_access(key)
 
     def get(self, key: K) -> V | None:
         self.policy.register_access(key)
@@ -164,7 +172,7 @@ class CachedProperty[V]:
     def __init__(self, func: Callable[..., V]) -> None:
         self.func = func
 
-    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
+    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | "CachedProperty[V]": # type: ignore[empty-body]
         if instance is None:
             return self
         if instance.cache.exists(self.func.__name__):
