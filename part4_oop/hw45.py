@@ -2,7 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
-from interfaces import Cache, HasCache, Policy, Storage
+from part4_oop.interfaces import Cache, HasCache, Policy, Storage
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -17,7 +17,7 @@ class DictStorage(Storage[K, V]):
 
     def get(self, key: K) -> V | None:
         if key in self._data:
-            return self._data[key]
+            return self._data.get(key)
         return None
 
     def exists(self, key: K) -> bool:
@@ -25,7 +25,7 @@ class DictStorage(Storage[K, V]):
 
     def remove(self, key: K) -> None:
         if key in self._data:
-            del self._data[key]
+            self._data.pop(key, None)
 
     def clear(self) -> None:
         self._data = {}
@@ -102,10 +102,10 @@ class LFUPolicy(Policy[K]):
         self._key_counter = {}
 
     def register_access(self, key: K) -> None:
-        if key not in self._key_counter:
-            self._key_counter[key] = 1
-        else:
+        if key in self._key_counter:
             self._key_counter[key] += 1
+        else:
+            self._key_counter[key] = 1
 
     def get_key_to_evict(self) -> K | None:
         remove_key, remove_count = None, 100000
@@ -119,7 +119,7 @@ class LFUPolicy(Policy[K]):
 
     def remove_key(self, key: K) -> None:
         if key in self._key_counter:
-            del self._key_counter[key]
+            self._key_counter.pop(key, None)
 
     def clear(self) -> None:
         self._key_counter = {}
