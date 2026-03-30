@@ -111,7 +111,8 @@ class LFUPolicy(Policy[K]):
             self._last = key
 
     def get_key_to_evict(self) -> K | None:
-        remove_key, remove_count = None, 100000
+        remove_key: K | None = None
+        remove_count = 100000
         if len(self._key_counter) >= self.capacity:
             for key, count in self._key_counter.items():
                 if key == self._last:
@@ -172,11 +173,12 @@ class CachedProperty[V]:
     def __init__(self, func: Callable[..., V]) -> None:
         self.func = func
 
-    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | "CachedProperty[V]": # type: ignore[empty-body]
+    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | "CachedProperty[V]":
         if instance is None:
             return self
-        if instance.cache.exists(self.func.__name__):
-            return instance.cache.get(self.func.__name__)
+        cache_value = instance.cache.exists(self.func.__name__)
+        if cache_value is not None:
+            return cache_value
         value = self.func(instance)
         instance.cache.set(self.func.__name__, value)
         return value
