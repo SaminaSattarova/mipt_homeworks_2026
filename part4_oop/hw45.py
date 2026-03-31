@@ -16,7 +16,7 @@ class DictStorage(Storage[K, V]):
         self._data[key] = value
 
     def get(self, key: K) -> V | None:
-        if key in self._data:
+        if self.exists(key):
             return self._data[key]
         return None
 
@@ -24,7 +24,7 @@ class DictStorage(Storage[K, V]):
         return key in self._data
 
     def remove(self, key: K) -> None:
-        if key in self._data:
+        if self.exists(key):
             del self._data[key]
 
     def clear(self) -> None:
@@ -103,12 +103,12 @@ class LFUPolicy(Policy[K]):
         self._last: K | None = None
 
     def register_access(self, key: K) -> None:
-        if key in self._key_counter:
-            self._key_counter[key] += 1
-            self._last = None
-        else:
+        if self._key_counter.get(key) is None:
             self._key_counter[key] = 1
             self._last = key
+        else:
+            self._key_counter[key] += 1
+            self._last = None
 
     def get_key_to_evict(self) -> K | None:
         remove_key: K | None = None
