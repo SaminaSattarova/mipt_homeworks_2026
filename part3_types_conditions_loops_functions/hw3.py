@@ -41,15 +41,10 @@ EXPENSE_CATEGORIES = {
 
 financial_transactions_storage: list[dict[str, object]] = []
 
-
-def output(message: str = "") -> None:
-    print(message)
-
-
 def input_request(request: str) -> None:
     command = request.split()
     if not command:
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return
 
     command_name = command[0]
@@ -60,21 +55,21 @@ def input_request(request: str) -> None:
     elif command_name == "stats":
         handle_stats_command(command)
     else:
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
 
 
 def handle_income_command(command: list[str]) -> None:
     if not check_income(command):
         return
     amount = float(command[1].replace(",", "."))
-    output(income_handler(amount, command[2]))
+    print(income_handler(amount, command[2]))
 
 
 def handle_cost_command(command: list[str]) -> None:
     if not check_cost(command):
         return
     amount = float(command[2].replace(",", "."))
-    output(cost_handler(command[1], amount, command[3]))
+    print(cost_handler(command[1], amount, command[3]))
 
 
 def handle_stats_command(command: list[str]) -> None:
@@ -85,34 +80,34 @@ def handle_stats_command(command: list[str]) -> None:
 
 def check_income(command: list[str]) -> bool:
     if len(command) != INCOME_PARTS_COUNT:
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return False
     if not check_amount(command[1]):
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return False
     if float(command[1].replace(",", ".")) <= 0:
-        output(NONPOSITIVE_VALUE_MSG)
+        print(NONPOSITIVE_VALUE_MSG)
         return False
     date = extract_date(command[2])
     if date is None:
-        output(INCORRECT_DATE_MSG)
+        print(INCORRECT_DATE_MSG)
         return False
     return True
 
 
 def check_cost(command: list[str]) -> bool:
     if len(command) == COST_CATEGORIES_PARTS_COUNT and command[1] == "categories":
-        output(cost_categories_handler())
+        print(cost_categories_handler())
         return False
     if len(command) != COST_PARTS_COUNT:
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return False
     if not is_valid_category(command[1]):
-        output(NOT_EXISTS_CATEGORY)
-        output(cost_categories_handler())
+        print(NOT_EXISTS_CATEGORY)
+        print(cost_categories_handler())
         return False
     if not check_amount(command[2].replace(",", ".")):
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return False
     return check_amount_cost(command)
 
@@ -120,23 +115,23 @@ def check_cost(command: list[str]) -> bool:
 def check_amount_cost(command: list[str]) -> bool:
     amount = float(command[2].replace(",", "."))
     if amount <= 0:
-        output(NONPOSITIVE_VALUE_MSG)
+        print(NONPOSITIVE_VALUE_MSG)
         return False
     date = extract_date(command[3])
     if date is None:
-        output(INCORRECT_DATE_MSG)
+        print(INCORRECT_DATE_MSG)
         return False
     return True
 
 
 def check_stats(command: list[str]) -> bool:
     if len(command) != STATS_PARTS_COUNT:
-        output(UNKNOWN_COMMAND_MSG)
+        print(UNKNOWN_COMMAND_MSG)
         return False
     command_date = command[1]
     date = extract_date(command_date)
     if date is None:
-        output(INCORRECT_DATE_MSG)
+        print(INCORRECT_DATE_MSG)
         return False
     return True
 
@@ -297,20 +292,20 @@ def print_stats(
     costs_in_this_month: float,
     dict_of_costs: dict[str, float],
 ) -> None:
-    output(f"Your statistics as of {date}:")
-    output(f"Total capital: {total_capital:.2f} rubles")
+    print(f"Your statistics as of {date}:")
+    print(f"Total capital: {total_capital:.2f} rubles")
     if incomes_in_this_month >= costs_in_this_month:
         profit = incomes_in_this_month - costs_in_this_month
-        output(f"{MONTH_PROFIT_PREFIX} {profit:.2f} rubles.")
+        print(f"{MONTH_PROFIT_PREFIX} {profit:.2f} rubles.")
     else:
         loss = costs_in_this_month - incomes_in_this_month
-        output(f"{MONTH_LOSS_PREFIX} {loss:.2f} rubles.")
-    output(f"Income: {incomes_in_this_month:.2f} rubles")
-    output(f"Expenses: {costs_in_this_month:.2f} rubles")
-    output()
-    output("Details (category: amount):")
+        print(f"{MONTH_LOSS_PREFIX} {loss:.2f} rubles.")
+    print(f"Income: {incomes_in_this_month:.2f} rubles")
+    print(f"Expenses: {costs_in_this_month:.2f} rubles")
+    print()
+    print("Details (category: amount):")
     for count, category in enumerate(sorted(dict_of_costs), start=1):
-        output(f"{count}. {category}: {change_format(dict_of_costs[category])}")
+        print(f"{count}. {category}: {change_format(dict_of_costs[category])}")
 
 
 def change_format(amount: float) -> str:
