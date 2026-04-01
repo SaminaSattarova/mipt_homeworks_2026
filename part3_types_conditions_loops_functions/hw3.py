@@ -41,6 +41,7 @@ EXPENSE_CATEGORIES = {
 
 financial_transactions_storage: list[dict[str, object]] = []
 
+
 def input_request(request: str) -> None:
     command = request.split()
     if not command:
