@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 from part4_oop.interfaces import Cache, HasCache, Policy, Storage
 
@@ -177,9 +177,9 @@ class CachedProperty[V]:
     def __init__(self, func: Callable[..., V]) -> None:
         self.func = func
 
-    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
+    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | Self:
         if instance is None:
-            return V | self  # type: ignore[return-value]
+            return self
         if instance.cache.exists(self.func.__name__):
             return instance.cache.get(self.func.__name__)  # type: ignore[return-value]
         value = self.func(instance)
