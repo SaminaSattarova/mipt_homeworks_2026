@@ -112,16 +112,16 @@ class LFUPolicy(Policy[K]):
 
     def get_key_to_evict(self) -> K | None:
         remove_key: K | None = None
-        remove_count = 100000
-        if len(self._key_counter) >= self.capacity:
-            for key, count in self._key_counter.items():
-                if key == self._last:
-                    continue
-                if count < remove_count:
-                    remove_key = key
-                    remove_count = count
-            return remove_key
-        return None
+        remove_count: int | None = None
+        if len(self._key_counter) < self.capacity:
+            return None
+        for key, count in self._key_counter.items():
+            if key == self._last:
+                continue
+            if remove_count is None or count < remove_count:
+                remove_key = key
+                remove_count = count
+        return remove_key
 
     def remove_key(self, key: K) -> None:
         if key in self._key_counter:
@@ -144,6 +144,10 @@ class MIPTCache(Cache[K, V]):
         self.policy = policy
 
     def set(self, key: K, value: V) -> None:
+        if self.storage.exists(key):
+            self.storage.set(key, value)
+            self.policy.register_access(key)
+            return
         value_key = self.policy.get_key_to_evict()
         if value_key is not None:
             self.policy.remove_key(value_key)
@@ -152,10 +156,10 @@ class MIPTCache(Cache[K, V]):
         self.policy.register_access(key)
 
     def get(self, key: K) -> V | None:
+        if not self.storage.exists(key):
+            return None
         self.policy.register_access(key)
-        if self.storage.exists(key):
-            return self.storage.get(key)
-        return None
+        return self.storage.get(key)
 
     def exists(self, key: K) -> bool:
         return self.storage.exists(key)
@@ -175,8 +179,8 @@ class CachedProperty[V]:
 
     def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
         if instance is None:
-            return self  # type: ignore[return-value]
-        if instance.cache.exists(self.func.__name__) is not None:
+            return V | self  # type: ignore[return-value]
+        if instance.cache.exists(self.func.__name__):
             return instance.cache.get(self.func.__name__)  # type: ignore[return-value]
         value = self.func(instance)
         instance.cache.set(self.func.__name__, value)
