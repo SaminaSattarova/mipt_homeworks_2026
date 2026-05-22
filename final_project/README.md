@@ -25,16 +25,11 @@ assistant/
 pip install -r requirements.txt
 ```
 
-Если используешь Ollama — скачай модель:
-```bash
-ollama pull llama3.2
-```
-
 ## Настройка
 
 ### Вариант 1 — через `.env`
 
-Скопируй `.env.example` в `.env` и заполни:
+Скопировать `.env.example` в `.env` и заполни:
 ```
 API_KEY=ollama
 API_HOST=http://localhost:11434/v1/
@@ -43,7 +38,7 @@ MODEL=llama3.2
 
 ### Вариант 2 — через `config.yaml`
 
-Создай `config.yaml` в корне проекта:
+Создать `config.yaml` в корне проекта:
 ```yaml
 api_key: ollama
 api_host: http://localhost:11434/v1/
