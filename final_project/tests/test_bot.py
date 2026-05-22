@@ -6,18 +6,24 @@ from assistant.bot import _stream_reply, run
 from assistant.config import Config
 
 
-def _make_config(**kwargs: object) -> Config:
-    defaults: dict[str, object] = {
-        'api_key': 'test',
-        'api_host': 'http://localhost/',
-        'model': 'test-model',
-        'temperature': 0.7,
-        'limit_message': None,
-        'limit_chars': None,
-        'system_prompt': None,
-    }
-    defaults.update(kwargs)
-    return Config(**defaults)
+def _make_config(
+    api_key: str = 'test',
+    api_host: str = 'http://localhost/',
+    model: str = 'test-model',
+    temperature: float = 0.7,
+    limit_message: int | None = None,
+    limit_chars: int | None = None,
+    system_prompt: str | None = None,
+) -> Config:
+    return Config(
+        api_key=api_key,
+        api_host=api_host,
+        model=model,
+        temperature=temperature,
+        limit_message=limit_message,
+        limit_chars=limit_chars,
+        system_prompt=system_prompt,
+    )
 
 
 def _make_stream_mock(tokens: list[str]) -> MagicMock:
