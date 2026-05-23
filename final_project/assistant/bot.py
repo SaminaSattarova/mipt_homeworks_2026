@@ -44,9 +44,6 @@ def run(config: Config) -> None:
             user_input = input('>>> ').strip()
         except EOFError:
             break
-        except KeyboardInterrupt:
-            print()
-            continue
 
         if not user_input:
             continue

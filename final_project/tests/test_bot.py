@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
+import pytest  # type: ignore[import-not-found]
 
 from assistant.bot import _stream_reply, run
 from assistant.config import Config

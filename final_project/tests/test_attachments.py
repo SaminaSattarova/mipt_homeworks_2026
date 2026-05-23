@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import-not-found]
 
 import assistant.attachments as att_module
 from assistant.attachments import process_attachments

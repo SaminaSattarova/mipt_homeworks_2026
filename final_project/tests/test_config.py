@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import-not-found]
 
 from assistant.config import load_config
 
