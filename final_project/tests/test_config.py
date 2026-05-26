@@ -1,10 +1,11 @@
-import pytest  # type: ignore[import-not-found]
+import pytest
+from pathlib import Path
 
 from assistant.config import load_config
 
 
 def test_load_config_from_yaml(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: pytest.TempPathFactory
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     yaml_file = tmp_path / 'config.yaml'
     yaml_file.write_text('api_key: yaml_key\napi_host: http://yaml_host/v1/\ntemperature: 0.5\n')
@@ -19,7 +20,7 @@ def test_load_config_from_yaml(
 
 
 def test_load_config_env_overrides_yaml(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: pytest.TempPathFactory
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     yaml_file = tmp_path / 'config.yaml'
     yaml_file.write_text('api_key: yaml_key\napi_host: http://yaml_host/v1/\n')
@@ -33,7 +34,7 @@ def test_load_config_env_overrides_yaml(
 
 
 def test_load_config_exits_when_no_api_key(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: pytest.TempPathFactory
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv('API_KEY', raising=False)

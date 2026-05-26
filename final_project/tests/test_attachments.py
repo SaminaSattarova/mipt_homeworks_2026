@@ -1,10 +1,11 @@
-import pytest  # type: ignore[import-not-found]
+import pytest
+from pathlib import Path
 
 import assistant.attachments as att_module
 from assistant.attachments import process_attachments
 
 
-def test_replaces_file_with_content(tmp_path: pytest.TempPathFactory) -> None:
+def test_replaces_file_with_content(tmp_path: Path) -> None:
     f = tmp_path / 'hello.txt'
     f.write_text('file content')
     result = process_attachments(f'смотри @::{f}::')
@@ -23,7 +24,7 @@ def test_no_pattern_unchanged() -> None:
 
 
 def test_file_too_large_skipped(
-    tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     f = tmp_path / 'big.txt'
     f.write_text('много данных')

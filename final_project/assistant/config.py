@@ -1,15 +1,20 @@
 import os
 import sys
 from dataclasses import dataclass
+from typing import Optional, Callable
 
 import yaml
 
+_load_dotenv: Optional[Callable[..., bool]]
 try:
-    from dotenv import load_dotenv  # type: ignore[import-not-found]
-
-    load_dotenv()
+    from dotenv import load_dotenv as _load_dotenv
 except ImportError:
-    pass
+    _load_dotenv = None
+
+
+def try_load_dotenv() -> None:
+    if _load_dotenv is not None:
+        _load_dotenv()
 
 
 @dataclass
@@ -39,6 +44,8 @@ def _read_yaml() -> dict[str, str]:
 
 def load_config() -> Config:
     raw = _read_yaml()
+
+    try_load_dotenv()
 
     env_keys: dict[str, str] = {
         'API_KEY': 'api_key',
